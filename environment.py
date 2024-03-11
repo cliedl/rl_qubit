@@ -38,6 +38,7 @@ class QubitEnv(gym.Env):
                                        high=np.array([100., 100., 1]),
                                        dtype=np.float32)
 
+        # TODO: This should eventually be limited to measurement outcomes, not the entire state
         self.observation_space = spaces.Box(low=np.array([0, -0.5, -0.5]),
                                             high=np.array([1., 0.5, 0.5]),
                                             dtype=np.float32)
@@ -103,39 +104,3 @@ class QubitEnv(gym.Env):
         else:
             reward = 0
         return reward
-
-    def render(self):
-        # Extract the state components
-        E, S_real, S_imag = self.state
-
-        # Construct Bloch vector from state components
-        x, y, z = 2*S_real, 2*S_imag, 1-2*E
-
-        # Create a 3D plot
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-
-        # Draw the Bloch sphere
-        phi, theta = np.linspace(0, 2 * np.pi, 100), np.linspace(0, np.pi, 100)
-        PHI, THETA = np.meshgrid(phi, theta)
-        R = 1  # Radius of the sphere
-        X = R * np.sin(THETA) * np.cos(PHI)
-        Y = R * np.sin(THETA) * np.sin(PHI)
-        Z = R * np.cos(THETA)
-
-        # Plot the surface
-        ax.plot_surface(X, Y, Z, rstride=1, cstride=1,
-                        color='black', alpha=0.3, linewidth=0)
-
-        # Plot the qubit state
-        ax.scatter([x], [y], [z], color="blue", s=50)
-
-        # Set plot display parameters
-        ax.set_xlim([-R*1.01, R*1.01])
-        ax.set_ylim([-R*1.01, R*1.01])
-        ax.set_zlim([-R*1.01, R*1.01])
-        ax.set_xlabel('Re(d)')
-        ax.set_ylabel('Im(d)')
-        ax.set_zlabel('Inversion')
-
-        return fig
