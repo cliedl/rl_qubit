@@ -26,7 +26,7 @@ algo = (
     .build()
 )
 
-for i in tqdm(range(50)):
+for i in tqdm(range(30)):
     result = algo.train()
     print(f"Mean episode reward: {result['episode_reward_mean']}")
 
