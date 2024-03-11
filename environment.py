@@ -1,8 +1,6 @@
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium.spaces import Box
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 
 class QubitEnv(gym.Env):
@@ -15,8 +13,8 @@ class QubitEnv(gym.Env):
     """
 
     def __init__(self,
-                 initial_state=np.array([0, 0, 0], dtype=np.float32),
-                 target_state=np.array([1, 0, 0], dtype=np.float32),
+                 initial_state=np.array([0., 0., 0.]),
+                 target_state=np.array([1., 0., 0.]),
                  dt=0.001):
         """
         Initialize the environment.
@@ -26,22 +24,20 @@ class QubitEnv(gym.Env):
         - target_state: The target state we want the qubit to reach.
         - dt: Time step for the simulation (in units of the natural lifetime of the qubit)
         """
-        super(QubitEnv, self).__init__()
+        super().__init__()
 
-        self.initial_state = np.array(initial_state, dtype=np.float32)
+        self.initial_state = initial_state
         self.state = self.initial_state.copy()
-        self.target_state = np.array(target_state, dtype=np.float32)
+        self.target_state = target_state
         self.dt = dt
 
         # Define the action and observation spaces
-        self.action_space = spaces.Box(low=np.array([-100., -100., 0]),
-                                       high=np.array([100., 100., 1]),
-                                       dtype=np.float32)
+        self.action_space = Box(low=np.array([0., -20., 0.]),
+                                high=np.array([20., 20., 1.]))
 
         # TODO: This should eventually be limited to measurement outcomes, not the entire state
-        self.observation_space = spaces.Box(low=np.array([0, -0.5, -0.5]),
-                                            high=np.array([1., 0.5, 0.5]),
-                                            dtype=np.float32)
+        self.observation_space = Box(low=np.array([0, -1., -1.]),
+                                     high=np.array([1., 1., 1.]))
 
     def step(self, action):
         """
@@ -56,7 +52,8 @@ class QubitEnv(gym.Env):
         - done: Whether the episode is finished.
         - info: Additional information.
         """
-        Omega, Delta, done = action
+        Omega, Delta, terminated = action
+        terminated = terminated > 0.5
 
         E, S_real, S_imag = self.state
         S = S_real + 1j * S_imag
@@ -70,13 +67,16 @@ class QubitEnv(gym.Env):
         self.state = [np.real(E_new), np.real(S_new), np.imag(S_new)]
 
         # Compute the reward
-        reward = self.compute_reward(done)
+        reward = self.compute_reward(terminated)
 
         # TODO: Define the conditions for episode termination.
+        truncated = False
         # For now, we terminate the episode if the done action is selected by the agent.
-        return self.state, reward, done, {}
+        return self.state, reward, terminated, truncated, {}
 
-    def reset(self):
+    def reset(self, seed=None, options=None):
+        super().reset(seed=seed)
+
         """
         Reset the environment to the initial state.
 
@@ -84,7 +84,7 @@ class QubitEnv(gym.Env):
         - state: The reset state of the qubit.
         """
         self.state = self.initial_state.copy()
-        return self.state
+        return self.state, {}
 
     def compute_reward(self, done):
         """
