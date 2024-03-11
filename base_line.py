@@ -2,6 +2,8 @@ from environment import QubitEnv
 from plot_utils import render_episode
 import numpy as np
 
+# Baseline for state preparation:
+# Apply a pi-pulse
 
 # initialize state in ground state
 env = QubitEnv(

@@ -22,13 +22,11 @@ ray.init()  # Initialize Ray; include necessary arguments based on your setup
 
 algo = (
     PPOConfig()
-    .rollouts(num_rollout_workers=1)
-    .resources(num_gpus=0)
     .environment(env="QubitEnv-v0")
     .build()
 )
 
-for i in tqdm(range(500)):
+for i in tqdm(range(50)):
     result = algo.train()
     print(f"Mean episode reward: {result['episode_reward_mean']}")
 
